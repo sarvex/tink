@@ -51,8 +51,7 @@ class _DecryptingStreamWrapper(io.RawIOBase):
     # For legacy reasons (Tink always encrypted with non-RAW keys) we use all
     # primitives, even those which have output_prefix_type != RAW.
     for entry_list in primitive_set.all():
-      for e in entry_list:
-        self._remaining_primitives.append(e.primitive)
+      self._remaining_primitives.extend(e.primitive for e in entry_list)
     self._attempting_stream = self._next_decrypting_stream()
 
   def _next_decrypting_stream(self) -> io.RawIOBase:

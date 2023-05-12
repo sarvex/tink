@@ -82,7 +82,7 @@ class FakeMac(mac.Mac):
 
   def verify_mac(self, mac_value: bytes, data: bytes) -> None:
     if mac_value != data + b'|' + self._name.encode():
-      raise core.TinkError('invalid mac ' + mac_value.decode())
+      raise core.TinkError(f'invalid mac {mac_value.decode()}')
 
 
 class FakeAead(aead.Aead):
@@ -168,7 +168,7 @@ class FakePublicKeyVerify(pk_signature.PublicKeyVerify):
 
   def verify(self, signature: bytes, data: bytes):
     if signature != data + b'|' + self._name.encode():
-      raise core.TinkError('invalid signature ' + signature.decode())
+      raise core.TinkError(f'invalid signature {signature.decode()}')
 
 
 class FakePrf(prf.Prf):

@@ -21,6 +21,7 @@ EcdsaPrivateKey, one can do:
 handle = keyset_handle.KeysetHandle(signature_key_templates.ECDSA_P256);
 """
 
+
 import warnings
 
 from tink.proto import common_pb2
@@ -32,10 +33,10 @@ from tink.internal import big_integer_util
 
 
 _prefix = 'type.googleapis.com/google.crypto.tink.'
-_ECDSA_KEY_TYPE_URL = _prefix + 'EcdsaPrivateKey'
-_ED25519_KEY_TYPE_URL = _prefix + 'Ed25519PrivateKey'
-_RSA_PKCS1_KEY_TYPE_URL = _prefix + 'RsaSsaPkcs1PrivateKey'
-_RSA_PSS_KEY_TYPE_URL = _prefix + 'RsaSsaPssPrivateKey'
+_ECDSA_KEY_TYPE_URL = f'{_prefix}EcdsaPrivateKey'
+_ED25519_KEY_TYPE_URL = f'{_prefix}Ed25519PrivateKey'
+_RSA_PKCS1_KEY_TYPE_URL = f'{_prefix}RsaSsaPkcs1PrivateKey'
+_RSA_PSS_KEY_TYPE_URL = f'{_prefix}RsaSsaPssPrivateKey'
 _RSA_F4 = 65537
 
 
@@ -49,12 +50,11 @@ def _create_ecdsa_key_template(
   params = ecdsa_pb2.EcdsaParams(
       hash_type=hash_type, curve=curve, encoding=encoding)
   key_format = ecdsa_pb2.EcdsaKeyFormat(params=params)
-  key_template = tink_pb2.KeyTemplate(
+  return tink_pb2.KeyTemplate(
       value=key_format.SerializeToString(),
       type_url=_ECDSA_KEY_TYPE_URL,
-      output_prefix_type=output_prefix_type)
-
-  return key_template
+      output_prefix_type=output_prefix_type,
+  )
 
 
 def _create_rsa_ssa_pkcs1_key_template(
@@ -66,12 +66,11 @@ def _create_rsa_ssa_pkcs1_key_template(
       params=params,
       modulus_size_in_bits=modulus_size,
       public_exponent=big_integer_util.num_to_bytes(public_exponent))
-  key_template = tink_pb2.KeyTemplate(
+  return tink_pb2.KeyTemplate(
       value=key_format.SerializeToString(),
       type_url=_RSA_PKCS1_KEY_TYPE_URL,
-      output_prefix_type=tink_pb2.TINK)
-
-  return key_template
+      output_prefix_type=tink_pb2.TINK,
+  )
 
 
 def _create_rsa_ssa_pss_key_template(
@@ -85,12 +84,11 @@ def _create_rsa_ssa_pss_key_template(
       params=params,
       modulus_size_in_bits=modulus_size,
       public_exponent=big_integer_util.num_to_bytes(public_exponent))
-  key_template = tink_pb2.KeyTemplate(
+  return tink_pb2.KeyTemplate(
       value=key_format.SerializeToString(),
       type_url=_RSA_PSS_KEY_TYPE_URL,
-      output_prefix_type=tink_pb2.TINK)
-
-  return key_template
+      output_prefix_type=tink_pb2.TINK,
+  )
 
 
 ECDSA_P256 = _create_ecdsa_key_template(common_pb2.SHA256, common_pb2.NIST_P256,

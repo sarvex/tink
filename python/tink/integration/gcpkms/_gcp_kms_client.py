@@ -123,8 +123,7 @@ class GcpKmsClient(_kms_aead_key_manager.KmsClient):
     """
     if self._key_uri and self._key_uri != key_uri:
       raise tink.TinkError(
-          'This client is bound to %s and cannot use key %s'
-          % (self._key_uri, key_uri)
+          f'This client is bound to {self._key_uri} and cannot use key {key_uri}'
       )
     if not key_uri.startswith(GCP_KEYURI_PREFIX):
       raise tink.TinkError('Invalid key_uri.')

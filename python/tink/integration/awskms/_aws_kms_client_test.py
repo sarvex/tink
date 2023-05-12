@@ -61,7 +61,7 @@ class AwsKmsClientTest(absltest.TestCase):
 
   def test_client_invalid_path(self):
     with self.assertRaises(ValueError):
-      awskms.AwsKmsClient('', CREDENTIAL_PATH + 'corrupted')
+      awskms.AwsKmsClient('', f'{CREDENTIAL_PATH}corrupted')
 
   def test_wrong_credentials_path(self):
     with self.assertRaises(ValueError):

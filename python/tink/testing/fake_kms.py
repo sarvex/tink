@@ -40,9 +40,7 @@ class FakeKmsClient(_kms_aead_key_manager.KmsClient):
   def does_support(self, key_uri: str) -> bool:
     if not key_uri.startswith(FAKE_KMS_PREFIX):
       return False
-    if not self._key_uri:
-      return True
-    return key_uri == self._key_uri
+    return True if not self._key_uri else key_uri == self._key_uri
 
   def get_aead(self, key_uri: str) -> aead.Aead:
     if not key_uri.startswith(FAKE_KMS_PREFIX):

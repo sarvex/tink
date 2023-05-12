@@ -68,7 +68,7 @@ def _gen_keyset(
 
 def _gen_key_value(size: int) -> bytes:
   """Returns a fixed key_value of a given size."""
-  return bytes(i for i in range(size))
+  return bytes(range(size))
 
 
 def aes_eax_key_test_cases():
@@ -181,10 +181,8 @@ class AeadKeyConsistencyTest(parameterized.TestCase):
     supported_langs = tink_config.supported_languages_for_key_type(
         tink_config.key_type_from_type_url(keyset.key[0].key_data.type_url))
 
-    langs = [lang for _, lang in self._create_aeads_ignore_errors(keyset)]
-
-    if langs:
-      with self.subTest('When creating AEAD objects for %s' % name):
+    if langs := [lang for _, lang in self._create_aeads_ignore_errors(keyset)]:
+      with self.subTest(f'When creating AEAD objects for {name}'):
         self.assertEqual(langs, supported_langs)
 
   @parameterized.parameters(
@@ -200,8 +198,10 @@ class AeadKeyConsistencyTest(parameterized.TestCase):
     for lang in utilities.ALL_LANGUAGES:
       if lang not in supported_langs:
         self.assertNotIn(
-            lang, langs,
-            'AEAD-Creation should fail in language %s for %s' % (lang, name))
+            lang,
+            langs,
+            f'AEAD-Creation should fail in language {lang} for {name}',
+        )
 
   @parameterized.parameters(
       itertools.chain(aes_eax_key_test_cases(), aes_gcm_key_test_cases(),
@@ -217,8 +217,7 @@ class AeadKeyConsistencyTest(parameterized.TestCase):
       aead0 = aead_and_lang[0][0]
       lang0 = aead_and_lang[0][1]
 
-      with self.subTest('Comparing %s-aead to %s-aead for %s ' %
-                        (lang0, lang, name)):
+      with self.subTest(f'Comparing {lang0}-aead to {lang}-aead for {name} '):
         ciphertext = aead.encrypt(plaintext, associated_data)
         self.assertEqual(aead0.decrypt(ciphertext, associated_data), plaintext)
 

@@ -55,7 +55,7 @@ def _kms_client_from_uri(key_uri: str) -> KmsClient:
   for client in _kms_clients:
     if client.does_support(key_uri):
       return client
-  raise core.TinkError('No KMS client does support: ' + key_uri)
+  raise core.TinkError(f'No KMS client does support: {key_uri}')
 
 
 _KMS_AEAD_KEY_TYPE_URL = 'type.googleapis.com/google.crypto.tink.KmsAeadKey'
@@ -72,7 +72,7 @@ class KmsAeadKeyManager(core.KeyManager[_aead.Aead]):
 
   def primitive(self, key_data: tink_pb2.KeyData) -> _aead.Aead:
     if key_data.type_url != _KMS_AEAD_KEY_TYPE_URL:
-      raise core.TinkError('wrong key type: ' + key_data.type_url)
+      raise core.TinkError(f'wrong key type: {key_data.type_url}')
     kms_key = kms_aead_pb2.KmsAeadKey.FromString(key_data.value)
     client = _kms_client_from_uri(kms_key.params.key_uri)
     return client.get_aead(key_uri=kms_key.params.key_uri)
@@ -84,7 +84,7 @@ class KmsAeadKeyManager(core.KeyManager[_aead.Aead]):
       self, key_template: tink_pb2.KeyTemplate
   ) -> tink_pb2.KeyData:
     if key_template.type_url != _KMS_AEAD_KEY_TYPE_URL:
-      raise core.TinkError('wrong key type: ' + key_template.type_url)
+      raise core.TinkError(f'wrong key type: {key_template.type_url}')
     key = kms_aead_pb2.KmsAeadKey(
         version=0,
         params=kms_aead_pb2.KmsAeadKeyFormat.FromString(key_template.value),
@@ -107,7 +107,7 @@ class KmsEnvelopeAeadKeyManager(core.KeyManager[_aead.Aead]):
 
   def primitive(self, key_data: tink_pb2.KeyData) -> _aead.Aead:
     if key_data.type_url != _KMS_ENVELOPE_AEAD_KEY_TYPE_URL:
-      raise core.TinkError('wrong key type: ' + key_data.type_url)
+      raise core.TinkError(f'wrong key type: {key_data.type_url}')
     env_key = kms_envelope_pb2.KmsEnvelopeAeadKey.FromString(key_data.value)
     client = _kms_client_from_uri(env_key.params.kek_uri)
 
@@ -123,7 +123,7 @@ class KmsEnvelopeAeadKeyManager(core.KeyManager[_aead.Aead]):
       self, key_template: tink_pb2.KeyTemplate
   ) -> tink_pb2.KeyData:
     if key_template.type_url != _KMS_ENVELOPE_AEAD_KEY_TYPE_URL:
-      raise core.TinkError('wrong key type: ' + key_template.type_url)
+      raise core.TinkError(f'wrong key type: {key_template.type_url}')
     env_key = kms_envelope_pb2.KmsEnvelopeAeadKey(
         version=0,
         params=kms_envelope_pb2.KmsEnvelopeAeadKeyFormat.FromString(

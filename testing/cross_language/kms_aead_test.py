@@ -71,7 +71,7 @@ def _kms_envelope_aead_templates(
     kms_envelope_aead_key_template = (
         aead.aead_key_templates.create_kms_envelope_aead_key_template(
             key_uri, _DEK_TEMPLATE))
-    kms_envelope_aead_template_name = '%s_KMS_ENVELOPE_AEAD' % kms_service
+    kms_envelope_aead_template_name = f'{kms_service}_KMS_ENVELOPE_AEAD'
     kms_key_templates[kms_envelope_aead_template_name] = (
         kms_envelope_aead_key_template)
   return kms_key_templates
@@ -148,7 +148,7 @@ class KmsAeadTest(parameterized.TestCase):
       self, kms_service, encrypt_lang, decrypt_lang
   ):
     kms_key_uri = _KMS_KEY_URI[kms_service]
-    kms_aead_template_name = '%s_KMS_AEAD' % kms_service
+    kms_aead_template_name = f'{kms_service}_KMS_AEAD'
     key_template = aead.aead_key_templates.create_kms_aead_key_template(
         kms_key_uri)
     keyset = testing_servers.new_keyset(encrypt_lang, key_template)
@@ -220,7 +220,7 @@ class KmsAeadTest(parameterized.TestCase):
     plaintext = b'plaintext'
     associated_data = b'associated_data'
     ciphertext = primitive.encrypt(plaintext, associated_data)
-    if lang == 'cc' or lang == 'python':
+    if lang in ['cc', 'python']:
       # TODO(b/263231865) C++ and Python do not yet properly support aliases.
       with self.assertRaises(tink.TinkError):
         primitive.decrypt(ciphertext, associated_data)
@@ -249,7 +249,7 @@ class KmsAeadTest(parameterized.TestCase):
     ciphertext = primitive.encrypt(plaintext, associated_data)
     ciphertext_2 = primitive_2.encrypt(plaintext, associated_data)
 
-    if lang == 'cc' or lang == 'python':
+    if lang in ['cc', 'python']:
       # TODO(b/263231865) C++ and Python do not yet properly support aliases.
       with self.assertRaises(tink.TinkError):
         primitive.decrypt(ciphertext, associated_data)

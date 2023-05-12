@@ -174,8 +174,8 @@ def _text_format_field(value: Any,
   if field.type == TYPE_MESSAGE:
     output = [
         indent + field.name + ' {',
-        _normalize_and_text_format_message(value, indent + '  '),
-        indent + '}'
+        _normalize_and_text_format_message(value, f'{indent}  '),
+        indent + '}',
     ]
     return '\n'.join(output)
   elif field.type == TYPE_ENUM:
@@ -203,24 +203,24 @@ def _normalize_and_text_format_message(msg: message.Message,
   output = []
   fields = msg.DESCRIPTOR.fields
   # special case for Tinks custom 'any' proto.
-  if (msg.DESCRIPTOR.full_name == 'google.crypto.tink.KeyTemplate' or
-      msg.DESCRIPTOR.full_name == 'google.crypto.tink.KeyData'):
+  if msg.DESCRIPTOR.full_name in [
+      'google.crypto.tink.KeyTemplate',
+      'google.crypto.tink.KeyData',
+  ]:
     type_url = getattr(msg, 'type_url')  # Pytype requires to use getattr
     output.append(
         _text_format_field(type_url, fields[0], indent))
     value = getattr(msg, 'value')
-    if msg.DESCRIPTOR.full_name == 'google.crypto.tink.KeyTemplate':
-      # In KeyTemplates, type_url does not match the proto type used.
-      proto_type = KeyProto.format_from_url(type_url)
-    else:
-      proto_type = KeyProto.from_url(type_url)
+    proto_type = (KeyProto.format_from_url(type_url) if
+                  msg.DESCRIPTOR.full_name == 'google.crypto.tink.KeyTemplate'
+                  else KeyProto.from_url(type_url))
     # parse 'value' and text format the content in a comment.
     field_proto = proto_type.FromString(value)
-    output.append(indent + '# value: [' + TYPE_PREFIX +
-                  proto_type.DESCRIPTOR.full_name + '] {')
-    formatted_message = _normalize_and_text_format_message(
-        field_proto, indent + '#   ')
-    if formatted_message:
+    output.append(
+        f'{indent}# value: [{TYPE_PREFIX}{proto_type.DESCRIPTOR.full_name}' +
+        '] {')
+    if formatted_message := _normalize_and_text_format_message(
+        field_proto, f'{indent}#   '):
       output.append(formatted_message)
     output.append(indent + '# }')
     # Serialize message again so it is canonicalized
@@ -238,8 +238,9 @@ def _normalize_and_text_format_message(msg: message.Message,
     fields = fields[2:]
   for field in fields:
     if field.label == LABEL_REPEATED:
-      for value in getattr(msg, field.name):
-        output.append(_text_format_field(value, field, indent))
+      output.extend(
+          _text_format_field(value, field, indent)
+          for value in getattr(msg, field.name))
     else:
       output.append(
           _text_format_field(

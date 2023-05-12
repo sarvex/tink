@@ -72,14 +72,10 @@ def named_testcases():
       for primitive in tink_config.all_primitives():
         yield {
             'testcase_name':
-                str(case_num) + '-' + lang + '-' + primitive.__name__ + '-' +
-                utilities.key_types_in_keyset(keyset)[0],
-            'lang':
-                lang,
-            'primitive':
-                primitive,
-            'keyset':
-                keyset,
+            f'{str(case_num)}-{lang}-{primitive.__name__}-{utilities.key_types_in_keyset(keyset)[0]}',
+            'lang': lang,
+            'primitive': primitive,
+            'keyset': keyset,
         }
         case_num += 1
 
@@ -111,17 +107,15 @@ def _is_b243759652_test_case(lang: str, keyset: bytes, primitive: Any) -> bool:
   primitives = [tink_config.primitive_for_keytype(k) for k in keytypes]
   # For the bug to occur, we must only at least one AEAD keytype (as it only
   # happens if at least one key type should *not* work).
-  if not any(p == aead.Aead for p in primitives):
+  if aead.Aead not in primitives:
     return False
   # For the bug to occur, all key types must be either for 'primitive' or
   # for Aead (otherwise primitive creation fails).
-  if not all(p == aead.Aead or p == primitive for p in primitives):
+  if any(p not in [aead.Aead, primitive] for p in primitives):
     return False
   # For the bug to occur, we must not have an AesEaxKey: these are unsupported
   # in go, and so if we have them, primitive creation fails.
-  if any(k == 'AesEaxKey' for k in keytypes):
-    return False
-  return True
+  return all(k != 'AesEaxKey' for k in keytypes)
 
 
 class SupportedKeyTypesTest(parameterized.TestCase):

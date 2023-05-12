@@ -58,10 +58,11 @@ class StreamingAeadPythonTest(parameterized.TestCase):
     key_template = utilities.KEY_TEMPLATE[key_template_name]
     # Take the first supported language to generate the keyset.
     keyset = testing_servers.new_keyset(supported_langs[0], key_template)
-    supported_streaming_aeads = {}
-    for lang in supported_langs:
-      supported_streaming_aeads[lang] = testing_servers.remote_primitive(
-          lang, keyset, streaming_aead.StreamingAead)
+    supported_streaming_aeads = {
+        lang: testing_servers.remote_primitive(lang, keyset,
+                                               streaming_aead.StreamingAead)
+        for lang in supported_langs
+    }
     for lang, p in supported_streaming_aeads.items():
       desc = (
           b'This is some plaintext message to be encrypted using key_template '
@@ -75,7 +76,7 @@ class StreamingAeadPythonTest(parameterized.TestCase):
       ciphertext_result_stream = p.new_encrypting_stream(
           plaintext_stream, associated_data)
       ciphertext = ciphertext_result_stream.read()
-      for _, p2 in supported_streaming_aeads.items():
+      for p2 in supported_streaming_aeads.values():
         ciphertext_stream = io.BytesIO(ciphertext)
         decrypted_stream = p2.new_decrypting_stream(
             ciphertext_stream, associated_data)

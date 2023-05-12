@@ -71,17 +71,17 @@ class MacTest(parameterized.TestCase):
     self.assertNotEmpty(supported_langs)
     # Take the first supported language to generate the keyset.
     keyset = testing_servers.new_keyset(supported_langs[0], key_template)
-    supported_macs = {}
-    for lang in supported_langs:
-      supported_macs[lang] = testing_servers.remote_primitive(
-          lang, keyset, mac.Mac)
+    supported_macs = {
+        lang: testing_servers.remote_primitive(lang, keyset, mac.Mac)
+        for lang in supported_langs
+    }
     for lang, p in supported_macs.items():
       data = (
           b'This is some data to be authenticated using key_template '
           b'%s in %s.' % (key_template_name.encode('utf8'),
                           lang.encode('utf8')))
       mac_value = p.compute_mac(data)
-      for _, p2 in supported_macs.items():
+      for p2 in supported_macs.values():
         self.assertIsNone(p2.verify_mac(mac_value, data))
 
 

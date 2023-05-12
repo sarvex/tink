@@ -99,8 +99,8 @@ def main(unused_argv):
   used_port = server.add_secure_port('[::]:%d' % FLAGS.port,
                                      grpc.local_server_credentials())
   server.start()
-  print('Server started on port ' + str(used_port))
-  print(' (stderr) Server started on port ' + str(used_port), file=sys.stderr)
+  print(f'Server started on port {str(used_port)}')
+  print(f' (stderr) Server started on port {str(used_port)}', file=sys.stderr)
   server.wait_for_termination()
 
 

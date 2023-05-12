@@ -26,8 +26,7 @@ from util import utilities
 
 def all_key_template_names():
   for _, names in utilities.KEY_TEMPLATE_NAMES.items():
-    for name in names:
-      yield name
+    yield from names
 
 
 def setUpModule():

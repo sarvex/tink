@@ -46,7 +46,7 @@ def register() -> None:
       'AesEaxKey',
       'XChaCha20Poly1305Key',
   ):
-    type_url = 'type.googleapis.com/google.crypto.tink.{}'.format(ident)
+    type_url = f'type.googleapis.com/google.crypto.tink.{ident}'
     key_manager = core.KeyManagerCcToPyWrapper(
         tink_bindings.AeadKeyManager.from_cc_registry(type_url), _aead.Aead,
         AeadCcToPyWrapper)

@@ -235,8 +235,7 @@ def _encrypt(keyset: tink_pb2.Keyset, master_key_primitive: aead.Aead,
     keyset2 = tink_pb2.Keyset.FromString(
         master_key_primitive.decrypt(encrypted_keyset, associated_data))
     if keyset != keyset2:
-      raise core.TinkError('cannot encrypt keyset: %s != %s' %
-                           (keyset, keyset2))
+      raise core.TinkError(f'cannot encrypt keyset: {keyset} != {keyset2}')
   except message.DecodeError:
     raise core.TinkError('invalid keyset, corrupted key material')
   return tink_pb2.EncryptedKeyset(
@@ -282,11 +281,11 @@ def _validate_keyset(keyset: tink_pb2.Keyset):
 def _validate_key(key: tink_pb2.Keyset.Key):
   """Raises tink_error.TinkError if key is not valid."""
   if not key.HasField('key_data'):
-    raise core.TinkError('key {} has no key data'.format(key.key_id))
+    raise core.TinkError(f'key {key.key_id} has no key data')
   if key.output_prefix_type == tink_pb2.UNKNOWN_PREFIX:
-    raise core.TinkError('key {} has unknown prefix'.format(key.key_id))
+    raise core.TinkError(f'key {key.key_id} has unknown prefix')
   if key.status == tink_pb2.UNKNOWN_STATUS:
-    raise core.TinkError('key {} has unknown status'.format(key.key_id))
+    raise core.TinkError(f'key {key.key_id} has unknown status')
 
 
 def _assert_no_secret_key_material(keyset: tink_pb2.Keyset):

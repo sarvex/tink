@@ -118,7 +118,7 @@ def from_public_keyset_handle(keyset_handle: tink.KeysetHandle) -> str:
     elif key.key_data.type_url == _JWT_RSA_SSA_PSS_PUBLIC_KEY_TYPE:
       keys.append(_convert_jwt_rsa_ssa_pss_key(key))
     else:
-      raise tink.TinkError('unknown key type: %s' % key.key_data.type_url)
+      raise tink.TinkError(f'unknown key type: {key.key_data.type_url}')
   return json.dumps({'keys': keys}, separators=(',', ':'))
 
 
@@ -146,8 +146,7 @@ def _convert_jwt_ecdsa_key(
       'alg': alg,
       'key_ops': ['verify'],
   }
-  kid = _jwt_format.get_kid(key.key_id, key.output_prefix_type)
-  if kid:
+  if kid := _jwt_format.get_kid(key.key_id, key.output_prefix_type):
     output['kid'] = kid
   elif ecdsa_public_key.HasField('custom_kid'):
     output['kid'] = ecdsa_public_key.custom_kid.value
@@ -170,8 +169,7 @@ def _convert_jwt_rsa_ssa_pkcs1_key(
       'alg': alg,
       'key_ops': ['verify'],
   }
-  kid = _jwt_format.get_kid(key.key_id, key.output_prefix_type)
-  if kid:
+  if kid := _jwt_format.get_kid(key.key_id, key.output_prefix_type):
     output['kid'] = kid
   elif public_key.HasField('custom_kid'):
     output['kid'] = public_key.custom_kid.value
@@ -194,8 +192,7 @@ def _convert_jwt_rsa_ssa_pss_key(
       'alg': alg,
       'key_ops': ['verify'],
   }
-  kid = _jwt_format.get_kid(key.key_id, key.output_prefix_type)
-  if kid:
+  if kid := _jwt_format.get_kid(key.key_id, key.output_prefix_type):
     output['kid'] = kid
   elif public_key.HasField('custom_kid'):
     output['kid'] = public_key.custom_kid.value
@@ -231,7 +228,7 @@ def to_public_keyset_handle(jwk_set: str) -> tink.KeysetHandle:
   try:
     keys_dict = json.loads(jwk_set)
   except json.decoder.JSONDecodeError as e:
-    raise tink.TinkError('error parsing JWK set: %s' % e.msg)
+    raise tink.TinkError(f'error parsing JWK set: {e.msg}')
   if 'keys' not in keys_dict:
     raise tink.TinkError('invalid JWK set: keys not found')
   proto_keyset = tink_pb2.Keyset()

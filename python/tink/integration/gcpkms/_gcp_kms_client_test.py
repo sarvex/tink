@@ -57,7 +57,7 @@ class GcpKmsClientTest(absltest.TestCase):
 
   def test_client_invalid_path(self):
     with self.assertRaises(FileNotFoundError):
-      gcpkms.GcpKmsClient(None, CREDENTIAL_PATH + 'corrupted')
+      gcpkms.GcpKmsClient(None, f'{CREDENTIAL_PATH}corrupted')
 
 
 if __name__ == '__main__':

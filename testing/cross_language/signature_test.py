@@ -51,10 +51,11 @@ class SignatureTest(parameterized.TestCase):
     # Take the first supported language to generate the private keyset.
     private_keyset = testing_servers.new_keyset(supported_langs[0],
                                                 key_template)
-    supported_signers = {}
-    for lang in supported_langs:
-      supported_signers[lang] = testing_servers.remote_primitive(
-          lang, private_keyset, signature.PublicKeySign)
+    supported_signers = {
+        lang: testing_servers.remote_primitive(lang, private_keyset,
+                                               signature.PublicKeySign)
+        for lang in supported_langs
+    }
     public_keyset = testing_servers.public_keyset('java', private_keyset)
     supported_verifiers = {}
     for lang in supported_verifiers:
@@ -65,7 +66,7 @@ class SignatureTest(parameterized.TestCase):
           b'A message to be signed using key_template %s in %s.'
           % (key_template_name.encode('utf8'), lang.encode('utf8')))
       sign = signer.sign(message)
-      for _, verifier in supported_verifiers.items():
+      for verifier in supported_verifiers.values():
         self.assertIsNone(verifier.verify(sign, message))
 
 # If the implementations work fine for keysets with single keys, then key

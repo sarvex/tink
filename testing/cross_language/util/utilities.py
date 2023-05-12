@@ -349,8 +349,7 @@ def _all_key_template_names_with_key_type():
 def tinkey_template_names_for(primitive_class: Any) -> Iterable[str]:
   """Returns all the key template names for the given primitive type."""
   for key_type in tink_config.key_types_for_primitive(primitive_class):
-    for template_name in KEY_TEMPLATE_NAMES[key_type]:
-      yield template_name
+    yield from KEY_TEMPLATE_NAMES[key_type]
 
 
 SUPPORTED_LANGUAGES_BY_TEMPLATE_NAME = {

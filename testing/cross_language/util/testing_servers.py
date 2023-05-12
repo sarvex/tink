@@ -13,6 +13,7 @@
 # limitations under the License.
 """testing_server starts up testing gRPC servers in different languages."""
 
+
 import os
 import subprocess
 import time
@@ -86,14 +87,17 @@ GCP_KEY_URI_PREFIX = (
 AWS_KEY_URI_PREFIX = 'aws-kms://arn:aws:kms:us-east-2:235739564943:key/'
 
 GCP_CREDENTIALS_PATH = os.path.join(
-    os.environ['TEST_SRCDIR'] if 'TEST_SRCDIR' in os.environ else '',
-    'cross_language_test/testdata/gcp/credential.json')
+    os.environ.get('TEST_SRCDIR', ''),
+    'cross_language_test/testdata/gcp/credential.json',
+)
 AWS_CREDENTIALS_INI_PATH = os.path.join(
-    os.environ['TEST_SRCDIR'] if 'TEST_SRCDIR' in os.environ else '',
-    'cross_language_test/testdata/aws/credentials.ini')
+    os.environ.get('TEST_SRCDIR', ''),
+    'cross_language_test/testdata/aws/credentials.ini',
+)
 AWS_CREDENTIALS_CRED_PATH = os.path.join(
-    os.environ['TEST_SRCDIR'] if 'TEST_SRCDIR' in os.environ else '',
-    'cross_language_test/testdata/aws/credentials.cred')
+    os.environ.get('TEST_SRCDIR', ''),
+    'cross_language_test/testdata/aws/credentials.cred',
+)
 
 _RELATIVE_ROOT_PATH = 'tink_base/testing'
 
@@ -138,7 +142,7 @@ def _server_path(lang: str) -> str:
     logging.info('try path: %s', server_path)
     if os.path.exists(server_path):
       return server_path
-  raise RuntimeError('Executable for lang %s not found' % lang)
+  raise RuntimeError(f'Executable for lang {lang} not found')
 
 
 def _server_cmd(lang: str, port: int) -> List[str]:
@@ -163,11 +167,10 @@ def _server_cmd(lang: str, port: int) -> List[str]:
         '--gcp_key_uri', GCP_KEY_URI_PREFIX,
         '--aws_key_uri', AWS_KEY_URI_PREFIX])
 
-  if lang == 'java' and server_path.endswith('.jar'):
-    java_path = os.path.join(_root_path(), _JAVA_PATH)
-    return [java_path, '-jar', server_path] + server_args
-  else:
+  if lang != 'java' or not server_path.endswith('.jar'):
     return [server_path] + server_args
+  java_path = os.path.join(_root_path(), _JAVA_PATH)
+  return [java_path, '-jar', server_path] + server_args
 
 
 def _get_file_content(filename: str) -> str:
@@ -204,7 +207,7 @@ class _TestingServers():
         self._output_file[lang] = open(output_path, 'w+')
       except IOError as e:
         logging.info('unable to open server output file %s', output_path)
-        raise RuntimeError('Could not start %s server' % lang) from e
+        raise RuntimeError(f'Could not start {lang} server') from e
       self._server[lang] = subprocess.Popen(
           cmd, stdout=self._output_file[lang], stderr=subprocess.STDOUT)
       logging.info('%s server started on port %d with pid: %d. Log output: %s',
@@ -220,15 +223,15 @@ class _TestingServers():
         self._server[lang].kill()
         _, _ = self._server[lang].communicate()
         raise RuntimeError(
-            'Could not start %s server, output=%s' %
-            (lang, _get_file_content(self._output_file[lang].name))) from e
+            f'Could not start {lang} server, output={_get_file_content(self._output_file[lang].name)}'
+        ) from e
       self._metadata_stub[lang] = testing_api_pb2_grpc.MetadataStub(
           self._channel[lang])
       self._keyset_stub[lang] = testing_api_pb2_grpc.KeysetStub(
           self._channel[lang])
     for primitive in _PRIMITIVES:
+      stub_name = f'_{primitive}_stub'
       for lang in SUPPORTED_LANGUAGES_BY_PRIMITIVE[primitive]:
-        stub_name = '_%s_stub' % primitive
         getattr(self, stub_name)[lang] = _PRIMITIVE_STUBS[primitive](
             self._channel[lang])
 
@@ -239,7 +242,7 @@ class _TestingServers():
       raise RuntimeError(
           'Could not start %s server, TEST_UNDECLARED_OUTPUTS_DIR environment'
           'variable must be set') from e
-    output_file = '%s-%s-%s' % (self._test_name, lang, 'server.log')
+    output_file = f'{self._test_name}-{lang}-server.log'
     return os.path.join(output_dir, output_file)
 
   def keyset_stub(self, lang) -> testing_api_pb2_grpc.KeysetStub:
@@ -291,15 +294,15 @@ class _TestingServers():
     print()
     print()
     for lang in LANGUAGES:
-      total_reps = 1 + 100 // len(lang + ' ')
-      length = total_reps * len(lang + ' ') - 1
+      total_reps = 1 + 100 // len(f'{lang} ')
+      length = total_reps * len(f'{lang} ') - 1
       print('=' * length)
-      print((lang + ' ') * total_reps)
+      print(f'{lang} ' * total_reps)
       print('v' * length)
       with open(self._get_output_path(lang)) as f:
         print(f.read())
       print('^' * length)
-      print((lang + ' ') * total_reps)
+      print(f'{lang} ' * total_reps)
       print('=' * length)
       print()
 
@@ -316,8 +319,7 @@ def start(output_files_prefix: str) -> None:
     response = _ts.metadata_stub(lang).GetServerInfo(
         testing_api_pb2.ServerInfoRequest())
     if lang != response.language:
-      raise ValueError(
-          'lang = %s != response.language = %s' % (lang, response.language))
+      raise ValueError(f'lang = {lang} != response.language = {response.language}')
     if response.tink_version:
       versions[lang] = response.tink_version
     else:
@@ -427,4 +429,4 @@ def remote_primitive(lang: str, keyset: bytes, primitive_class: Type[P]) -> P:
     return _primitives.JwtPublicKeySign(lang, _ts.jwt_stub(lang), keyset)
   if primitive_class == tink.jwt.JwtPublicKeyVerify:
     return _primitives.JwtPublicKeyVerify(lang, _ts.jwt_stub(lang), keyset)
-  raise ValueError('Unsupported P in remote_primitive: ' + str(primitive_class))
+  raise ValueError(f'Unsupported P in remote_primitive: {str(primitive_class)}')

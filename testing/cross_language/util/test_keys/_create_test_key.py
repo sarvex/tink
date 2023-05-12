@@ -68,10 +68,8 @@ def _use_stored_key(template: tink_pb2.KeyTemplate) -> bool:
       'type.googleapis.com/google.crypto.tink.JwtRsaSsaPkcs1PrivateKey'):
     return True
   # Creating RSA Keys is very slow.
-  if (template.type_url ==
-      'type.googleapis.com/google.crypto.tink.JwtRsaSsaPssPrivateKey'):
-    return True
-  return False
+  return (template.type_url ==
+          'type.googleapis.com/google.crypto.tink.JwtRsaSsaPssPrivateKey')
 
 
 def new_or_stored_key(

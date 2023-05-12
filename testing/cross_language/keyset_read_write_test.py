@@ -132,14 +132,24 @@ def read_write_encrypted_test_cases(
     for write_lang in testing_servers.LANGUAGES:
       for read_lang in testing_servers.LANGUAGES:
         for associated_data in [None, b'', b'associated_data']:
-          yield ('_bin_%s, r in %s, w in %s, ad=%s' %
-                 (keyset_name, read_lang, write_lang, associated_data), keyset,
-                 read_lang, 'KEYSET_READER_BINARY', write_lang,
-                 'KEYSET_WRITER_BINARY', associated_data)
-          yield ('_json_%s, r in %s, w in %s, ad=%s' %
-                 (keyset_name, write_lang, read_lang, associated_data), keyset,
-                 read_lang, 'KEYSET_READER_JSON', write_lang,
-                 'KEYSET_WRITER_JSON', associated_data)
+          yield (
+              f'_bin_{keyset_name}, r in {read_lang}, w in {write_lang}, ad={associated_data}',
+              keyset,
+              read_lang,
+              'KEYSET_READER_BINARY',
+              write_lang,
+              'KEYSET_WRITER_BINARY',
+              associated_data,
+          )
+          yield (
+              f'_json_{keyset_name}, r in {write_lang}, w in {read_lang}, ad={associated_data}',
+              keyset,
+              read_lang,
+              'KEYSET_READER_JSON',
+              write_lang,
+              'KEYSET_WRITER_JSON',
+              associated_data,
+          )
 
 
 class KeysetReadWriteTest(parameterized.TestCase):

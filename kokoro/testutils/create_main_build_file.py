@@ -104,7 +104,7 @@ $gcpk_deps_formatted
 def _format_deps(deps_list):
   """Maps a list of dependencies into a single string."""
 
-  stripped_quoted_deps = ['"' + l.strip() + '",' for l in deps_list]
+  stripped_quoted_deps = [f'"{l.strip()}",' for l in deps_list]
   return '\n'.join(stripped_quoted_deps)
 
 

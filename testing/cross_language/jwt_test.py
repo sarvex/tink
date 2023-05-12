@@ -46,10 +46,10 @@ class JwtTest(parameterized.TestCase):
     key_template = utilities.KEY_TEMPLATE[key_template_name]
     # Take the first supported language to generate the keyset.
     keyset = testing_servers.new_keyset(supported_langs[0], key_template)
-    supported_jwt_macs = []
-    for lang in supported_langs:
-      supported_jwt_macs.append(
-          testing_servers.remote_primitive(lang, keyset, jwt.JwtMac))
+    supported_jwt_macs = [
+        testing_servers.remote_primitive(lang, keyset, jwt.JwtMac)
+        for lang in supported_langs
+    ]
     now = datetime.datetime.now(tz=datetime.timezone.utc)
     raw_jwt = jwt.new_raw_jwt(
         issuer='issuer',
@@ -71,15 +71,17 @@ class JwtTest(parameterized.TestCase):
     # Take the first supported language to generate the private keyset.
     private_keyset = testing_servers.new_keyset(supported_langs[0],
                                                 key_template)
-    supported_signers = {}
-    for lang in supported_langs:
-      supported_signers[lang] = testing_servers.remote_primitive(
-          lang, private_keyset, jwt.JwtPublicKeySign)
+    supported_signers = {
+        lang: testing_servers.remote_primitive(lang, private_keyset,
+                                               jwt.JwtPublicKeySign)
+        for lang in supported_langs
+    }
     public_keyset = testing_servers.public_keyset('java', private_keyset)
-    supported_verifiers = {}
-    for lang in supported_langs:
-      supported_verifiers[lang] = testing_servers.remote_primitive(
-          lang, public_keyset, jwt.JwtPublicKeyVerify)
+    supported_verifiers = {
+        lang: testing_servers.remote_primitive(lang, public_keyset,
+                                               jwt.JwtPublicKeyVerify)
+        for lang in supported_langs
+    }
     now = datetime.datetime.now(tz=datetime.timezone.utc)
     raw_jwt = jwt.new_raw_jwt(
         issuer='issuer', expiration=now + datetime.timedelta(seconds=100))
@@ -125,17 +127,14 @@ class JwtTest(parameterized.TestCase):
         # have different values.
         jwks = json.loads(public_jwk_set)
         has_kid = 'kid' in jwks['keys'][0]
+        # Change the "kid" property of the JWK.
+        jwks['keys'][0]['kid'] = 'unknown kid'
+        public_keyset = testing_servers.jwk_set_to_keyset(
+            lang2, json.dumps(jwks))
+        verifier = testing_servers.remote_primitive(lang2, public_keyset,
+                                                    jwt.JwtPublicKeyVerify)
         if has_kid:
-          # Change the "kid" property of the JWK.
-          jwks['keys'][0]['kid'] = 'unknown kid'
-          public_keyset = testing_servers.jwk_set_to_keyset(
-              lang2, json.dumps(jwks))
-          verifier = testing_servers.remote_primitive(lang2, public_keyset,
-                                                      jwt.JwtPublicKeyVerify)
-          with self.assertRaises(
-              tink.TinkError,
-              msg='%s accepts tokens with an incorrect kid unexpectedly' %
-              lang2):
+          with self.assertRaises(tink.TinkError, msg=f'{lang2} accepts tokens with an incorrect kid unexpectedly'):
             verifier.verify_and_decode(compact, validator)
 
           # Remove the "kid" property of the JWK.
@@ -144,17 +143,8 @@ class JwtTest(parameterized.TestCase):
               lang2, json.dumps(jwks))
           verifier = testing_servers.remote_primitive(lang2, public_keyset,
                                                       jwt.JwtPublicKeyVerify)
-          verified_jwt = verifier.verify_and_decode(compact, validator)
-          self.assertEqual(verified_jwt.issuer(), 'issuer')
-        else:
-          # Add a "kid" property of the JWK.
-          jwks['keys'][0]['kid'] = 'unknown kid'
-          public_keyset = testing_servers.jwk_set_to_keyset(
-              lang2, json.dumps(jwks))
-          verifier = testing_servers.remote_primitive(lang2, public_keyset,
-                                                      jwt.JwtPublicKeyVerify)
-          verified_jwt = verifier.verify_and_decode(compact, validator)
-          self.assertEqual(verified_jwt.issuer(), 'issuer')
+        verified_jwt = verifier.verify_and_decode(compact, validator)
+        self.assertEqual(verified_jwt.issuer(), 'issuer')
 
 
 if __name__ == '__main__':

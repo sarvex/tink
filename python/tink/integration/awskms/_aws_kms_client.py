@@ -35,7 +35,7 @@ def _encryption_context(associated_data: bytes) -> Dict[str, str]:
     hex_associated_data = binascii.hexlify(associated_data).decode('utf-8')
     return {'associatedData': hex_associated_data}
   else:
-    return dict()
+    return {}
 
 
 class _AwsKmsAead(aead.Aead):
@@ -65,9 +65,7 @@ class _AwsKmsAead(aead.Aead):
       )
       if response['KeyId'] != self.key_arn:
         raise tink.TinkError(
-            'invalid key id: got %s, want %s'
-            % (self.key_arn, response['KeyId'])
-        )
+            f"invalid key id: got {self.key_arn}, want {response['KeyId']}")
       return response['Plaintext']
     except exceptions.ClientError as e:
       raise tink.TinkError(e)
@@ -88,11 +86,10 @@ def _parse_config(config_path: str) -> Tuple[str, str]:
   default = config['default']
   if 'aws_access_key_id' not in default:
     raise ValueError('invalid config: aws_access_key_id not found')
-  aws_access_key_id = default['aws_access_key_id']
   if 'aws_secret_access_key' not in default:
     raise ValueError('invalid config: aws_secret_access_key not found')
-  aws_secret_access_key = default['aws_secret_access_key']
-  return (aws_access_key_id, aws_secret_access_key)
+  aws_access_key_id = default['aws_access_key_id']
+  return aws_access_key_id, default['aws_secret_access_key']
 
 
 def _get_region_from_key_arn(key_arn: str) -> str:
@@ -125,11 +122,10 @@ class AwsKmsClient(_kms_aead_key_manager.KmsClient):
     """
     if not key_uri:
       self._key_arn = None
-    else:
-      match = re.match('aws-kms://arn:aws:kms:([a-z0-9-]+):', key_uri)
-      if not match:
-        raise tink.TinkError('invalid key URI')
+    elif match := re.match('aws-kms://arn:aws:kms:([a-z0-9-]+):', key_uri):
       self._key_arn = _key_uri_to_key_arn(key_uri)
+    else:
+      raise tink.TinkError('invalid key URI')
     if not credentials_path:
       self._aws_access_key_id = None
       self._aws_secret_access_key = None
@@ -149,9 +145,7 @@ class AwsKmsClient(_kms_aead_key_manager.KmsClient):
     """
     if not key_uri.startswith(AWS_KEYURI_PREFIX):
       return False
-    if not self._key_arn:
-      return True
-    return _key_uri_to_key_arn(key_uri) == self._key_arn
+    return _key_uri_to_key_arn(key_uri) == self._key_arn if self._key_arn else True
 
   def get_aead(self, key_uri: str) -> aead.Aead:
     """Returns an Aead-primitive backed by KMS key specified by 'key_uri'.
@@ -168,10 +162,9 @@ class AwsKmsClient(_kms_aead_key_manager.KmsClient):
     if not self.does_support(key_uri):
       if self._key_arn:
         raise tink.TinkError(
-            'This client is bound to %s and cannot use key %s' %
-            (self._key_arn, key_uri))
-      raise tink.TinkError(
-          'This client does not support key %s' % key_uri)
+            f'This client is bound to {self._key_arn} and cannot use key {key_uri}'
+        )
+      raise tink.TinkError(f'This client does not support key {key_uri}')
     key_arn = _key_uri_to_key_arn(key_uri)
     session = boto3.session.Session(
         aws_access_key_id=self._aws_access_key_id,

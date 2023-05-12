@@ -74,42 +74,29 @@ def simple_valid_key() -> (
 
 
 def lang_and_valid_keys_create_and_encrypt():
-  result = []
   langs = tink_config.supported_languages_for_key_type('AesGcmHkdfStreamingKey')
 
   key = simple_valid_key()
-  for lang in langs:
-    result.append((lang, key))
-
+  result = [(lang, key) for lang in langs]
   key = simple_valid_key()
   assert key.params.derived_key_size == 16
   key.params.derived_key_size = 32
   key.key_value = b'0123456789abcdef0123456789abcdef'
-  for lang in langs:
-    result.append((lang, key))
-
+  result.extend((lang, key) for lang in langs)
   # HKDF Hash Type:
   key = simple_valid_key()
   key.params.hkdf_hash_type = common_pb2.HashType.SHA1
-  for lang in langs:
-    result.append((lang, key))
-
+  result.extend((lang, key) for lang in langs)
   key = simple_valid_key()
   key.params.hkdf_hash_type = common_pb2.HashType.SHA256
-  for lang in langs:
-    result.append((lang, key))
-
+  result.extend((lang, key) for lang in langs)
   key = simple_valid_key()
   key.params.hkdf_hash_type = common_pb2.HashType.SHA512
-  for lang in langs:
-    result.append((lang, key))
-
+  result.extend((lang, key) for lang in langs)
   # Minimum ciphertext_segment_size
   key = simple_valid_key()
   key.params.ciphertext_segment_size = key.params.derived_key_size + 25
-  for lang in langs:
-    result.append((lang, key))
-
+  result.extend((lang, key) for lang in langs)
   return result
 
 
@@ -127,48 +114,33 @@ def lang_and_valid_keys_create_only():
 
 
 def lang_and_invalid_keys():
-  result = []
   langs = tink_config.supported_languages_for_key_type('AesGcmHkdfStreamingKey')
 
   key = simple_valid_key()
   key.params.derived_key_size = 24
-  for lang in langs:
-    result.append((lang, key))
-
+  result = [(lang, key) for lang in langs]
   key = simple_valid_key()
   key.params.hkdf_hash_type = common_pb2.HashType.SHA224
-  for lang in langs:
-    result.append((lang, key))
-
+  result.extend((lang, key) for lang in langs)
   key = simple_valid_key()
   key.params.hkdf_hash_type = common_pb2.HashType.SHA384
-  for lang in langs:
-    result.append((lang, key))
-
+  result.extend((lang, key) for lang in langs)
   # Check requirement len(InitialKeyMaterial) >= DerivedKeySize
   key = simple_valid_key()
   key.key_value = b'0123456789abcdef'
   key.params.derived_key_size = 32
-  for lang in langs:
-    result.append((lang, key))
-
+  result.extend((lang, key) for lang in langs)
   # HKDF Hash Type:
   key = simple_valid_key()
   key.params.hkdf_hash_type = common_pb2.HashType.UNKNOWN_HASH
-  for lang in langs:
-    result.append((lang, key))
-
+  result.extend((lang, key) for lang in langs)
   # Minimum ciphertext_segment_size
   key = simple_valid_key()
   key.params.ciphertext_segment_size = key.params.derived_key_size + 24
-  for lang in langs:
-    result.append((lang, key))
-
+  result.extend((lang, key) for lang in langs)
   key = simple_valid_key()
   key.params.ciphertext_segment_size = 2**31
-  for lang in langs:
-    result.append((lang, key))
-
+  result.extend((lang, key) for lang in langs)
   return result
 
 

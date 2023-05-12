@@ -85,18 +85,16 @@ class AeadPythonTest(parameterized.TestCase):
     return result
 
   def _langs_from_key_template_name(self, key_template_name: str) -> List[str]:
-    if key_template_name in _ADDITIONAL_KEY_TEMPLATES:
-      _, key_type = _ADDITIONAL_KEY_TEMPLATES[key_template_name]
-      return tink_config.supported_languages_for_key_type(key_type)
-    else:
+    if key_template_name not in _ADDITIONAL_KEY_TEMPLATES:
       return utilities.SUPPORTED_LANGUAGES_BY_TEMPLATE_NAME[key_template_name]
+    _, key_type = _ADDITIONAL_KEY_TEMPLATES[key_template_name]
+    return tink_config.supported_languages_for_key_type(key_type)
 
   def _as_proto_template(self, key_template_name: str) -> tink_pb2.KeyTemplate:
-    if key_template_name in _ADDITIONAL_KEY_TEMPLATES:
-      key_template, _ = _ADDITIONAL_KEY_TEMPLATES[key_template_name]
-      return key_template
-    else:
+    if key_template_name not in _ADDITIONAL_KEY_TEMPLATES:
       return utilities.KEY_TEMPLATE[key_template_name]
+    key_template, _ = _ADDITIONAL_KEY_TEMPLATES[key_template_name]
+    return key_template
 
   @parameterized.parameters([
       *utilities.tinkey_template_names_for(aead.Aead),
@@ -110,7 +108,7 @@ class AeadPythonTest(parameterized.TestCase):
     keyset = testing_servers.new_keyset(langs[0], proto_template)
 
     supported_aeads = self._create_aeads_ignore_errors(keyset)
-    self.assertEqual(set([lang for (_, lang) in supported_aeads]), set(langs))
+    self.assertEqual({lang for (_, lang) in supported_aeads}, set(langs))
     for (p, lang) in supported_aeads:
       plaintext = (
           b'This is some plaintext message to be encrypted using key_template '
@@ -123,8 +121,10 @@ class AeadPythonTest(parameterized.TestCase):
       for (p2, lang2) in supported_aeads:
         output = p2.decrypt(ciphertext, associated_data)
         self.assertEqual(
-            output, plaintext,
-            'While encrypting in %s an decrypting in %s' % (lang, lang2))
+            output,
+            plaintext,
+            f'While encrypting in {lang} an decrypting in {lang2}',
+        )
 
 
 # If the implementations work fine for keysets with single keys, then key

@@ -59,11 +59,11 @@ def key_type_from_type_url(type_url: str) -> str:
     ValueError if the type url is unknown or in a bad format.
   """
   if not type_url.startswith(_TYPE_URL_PREFIX):
-    raise ValueError('Invalid type_url: ' + type_url)
+    raise ValueError(f'Invalid type_url: {type_url}')
   # removeprefix does not yet exist in all our supported python versions.
   key_type = type_url[len(_TYPE_URL_PREFIX):]
   if key_type not in all_key_types():
-    raise ValueError('key type unknown: ' + key_type)
+    raise ValueError(f'key type unknown: {key_type}')
   return key_type
 
 
@@ -79,7 +79,7 @@ def supported_languages_for_key_type(key_type: str) -> List[str]:
     ValueError if the key type is unknown.
   """
   if key_type not in all_key_types():
-    raise ValueError('key_type unknown: ' + key_type)
+    raise ValueError(f'key_type unknown: {key_type}')
   return _key_types.SUPPORTED_LANGUAGES[key_type]
 
 
@@ -111,7 +111,7 @@ def primitive_for_keytype(key_type: str) -> Any:
   for p, key_types in _key_types.KEY_TYPES.items():
     if key_type in key_types:
       return p
-  raise ValueError('Unknown key type: ' + key_type)
+  raise ValueError(f'Unknown key type: {key_type}')
 
 
 def is_asymmetric_public_key_primitive(p: Any) -> bool:

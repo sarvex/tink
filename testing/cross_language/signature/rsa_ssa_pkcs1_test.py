@@ -305,13 +305,13 @@ def valid_key_testcases():
       'RsaSsaPkcs1PublicKey'
   ):
     for key_desc, key in valid_public_keys():
-      if lang == 'go' and (
-          key_desc == '2048-bit public key with e=2^16+3'
-          or key_desc == '2048-bit public key with e=2^32-1'
-      ):
+      if lang == 'go' and key_desc in [
+          '2048-bit public key with e=2^16+3',
+          '2048-bit public key with e=2^32-1',
+      ]:
         # Go only accepts e = F4 = 2^16 + 1 = 65537. See also b/274605582.
         continue
-      yield ('%s: %s' % (key_desc, lang), lang, key)
+      yield (f'{key_desc}: {lang}', lang, key)
 
 
 def invalid_key_testcases():
@@ -322,7 +322,7 @@ def invalid_key_testcases():
       if lang == 'java' and key_desc == '2048-bit public key with e=2^32+1':
         # Java accepts large values for e. See also b/274605582.
         continue
-      yield ('%s: %s' % (key_desc, lang), lang, key)
+      yield (f'{key_desc}: {lang}', lang, key)
 
 
 class RsaSsaPkcs1PublicKeyTest(parameterized.TestCase):
